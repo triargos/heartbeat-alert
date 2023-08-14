@@ -25,13 +25,13 @@ function index() {
             }
         } catch (error: unknown) {
             console.log(error)
-            // if(error instanceof Error){
-            //     await slackClient.sendMessage(error.message, "ERROR")
-            // }
-            // if(error instanceof AxiosError){
-            //     await slackClient.sendMessage(error.message, "ERROR")
-            // }
-            // await slackClient.sendMessage("Error getting status", "ERROR")
+             if(error instanceof Error){
+                 await slackClient.sendMessage(error.message, "ERROR")
+             }
+             else if(error instanceof AxiosError){
+                 await slackClient.sendMessage(error.message, "ERROR")
+             }
+             else await slackClient.sendMessage("Error getting status", "ERROR")
         }
         }, elasticConfig.intervalSeconds * 1000)
 
