@@ -3,6 +3,7 @@ import {env} from "./env";
 import {ElasticClient, parseElasticResponse} from "./elastic/elastic-client";
 import {elasticConfig} from "../config/elastic";
 import {UptimeStore} from "./state/uptime";
+import {AxiosError} from "axios";
 
 const slackClient = new SlackClient(env.SLACK_WEBHOOK_URL);
 const elasticClient = new ElasticClient(env.ELASTICSEARCH_URL, env.ELASTICSEARCH_API_KEY, elasticConfig.index)
@@ -15,7 +16,6 @@ async function getStatus() {
 }
 
 function index() {
-    console.log("Started...")
     setInterval(async () => {
         try {
             const status = await getStatus()
@@ -24,10 +24,13 @@ function index() {
                 await slackClient.sendAppStatusUpdate(status)
             }
         } catch (error: unknown) {
-            if(error instanceof  Error){
+            if(error instanceof Error){
                 await slackClient.sendMessage(error.message, "ERROR")
             }
-            throw error
+            if(error instanceof AxiosError){
+                await slackClient.sendMessage(error.message, "ERROR")
+            }
+            await slackClient.sendMessage("Error getting status", "ERROR")
         }
         }, elasticConfig.intervalSeconds * 1000)
 
