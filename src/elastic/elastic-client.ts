@@ -1,31 +1,16 @@
 import axios from "axios";
 import {elasticConfig} from "../../config/elastic";
 import {ElasticHeartbeatResponse} from "../../types/elastic";
-import {App} from "../state/uptime";
+import {env} from "../env";
 
-export class ElasticClient {
-    private readonly elasticServiceUrl: string;
-    private readonly apiKey: string;
-    private readonly index: string;
+const elasticClient = axios.create({baseURL: env.ELASTICSEARCH_URL, headers: {
+    "Authorization": `ApiKey ${env.ELASTICSEARCH_API_KEY}`
+    }})
 
-    constructor(elasticServiceUrl: string, apiKey: string, index: string) {
-        this.elasticServiceUrl = elasticServiceUrl;
-        this.apiKey = apiKey;
-        this.index = index;
-    }
-
-    async getStatus() {
-        const url = `${this.elasticServiceUrl}/${this.index}/_search`;
-        return axios.post<ElasticHeartbeatResponse>(url, {
-            ...getElasticQuery(elasticConfig.minutesAgo),
-        }, {
-            headers: {
-                "Authorization": `ApiKey ${this.apiKey}`
-            }
-        })
-    }
-
-
+export async function getMonitorStatus(){
+    return elasticClient.post(`/${elasticConfig.index}/_search`, {
+        ...getElasticQuery(elasticConfig.minutesAgo)
+    })
 }
 
 export function parseElasticResponse(data: ElasticHeartbeatResponse) {
@@ -33,8 +18,9 @@ export function parseElasticResponse(data: ElasticHeartbeatResponse) {
         return data.aggregations.by_monitors.buckets.map((bucket) => {
             const name = bucket.key;
             const status = bucket.top_hit.hits.hits[0]._source.monitor.status;
+            const tags = bucket.top_hit.hits.hits[0]._source.tags
             const url = bucket.top_hit.hits.hits[0]._source.url.full;
-            return {name, status, url}
+            return {name, status, url, tags}
         });
     } catch (error) {
         throw new Error("Error parsing response");
@@ -104,6 +90,7 @@ function getElasticQuery(minutesAgo: number){
                                     "monitor.status",
                                     "url.full",
                                     "url.domain",
+                                    "tags"
                                 ],
                             },
                             size: 1,

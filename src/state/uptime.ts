@@ -1,15 +1,14 @@
-import {SlackClient} from "../slack/slack-client";
-
 export type App = {
     name: string
     status: string,
     url: string
+    tags: string[]
 }
 
 export class UptimeStore {
     private apps: App[]
 
-    constructor(slackClient: SlackClient) {
+    constructor() {
         this.apps = []
     }
     checkUptimeChange(updatedApps: App[]) {

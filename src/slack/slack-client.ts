@@ -1,43 +1,41 @@
 import axios from "axios";
 import {App, UptimeStore} from "../state/uptime";
+import {env} from "../env";
 
+const messageConfig = {
+    successColor: "#48A868",
+    successEmoji: "🟢",
+    errorColor: "#CC3643",
+    errorEmoji: "🔴",
 
-const statusText = (app: App) => {
-    const emoji = app.status === "up" ? "🟢" : "🔴"
-    return `${emoji} *${app.name}* is *${app.status.toUpperCase()}*\n${app.url}`
 }
 
-export class SlackClient {
-    private readonly webhookUrl: string;
-    private readonly successColor: string = "#48A868";
-    private readonly errorColor: string = "#CC3643";
 
-    constructor(webhookUrl: string) {
-        this.webhookUrl = webhookUrl;
-    }
-    async sendAppStatusUpdate(apps: App[]) {
-        const blocks: any[] = generateBlocks(apps)
-        return axios.post(this.webhookUrl, {
-            text: "",
-            blocks: blocks
-        })
-    }
-    sendMessage(message
-                    :
-                    string, type
-                    :
-                    "ERROR" | "SUCCESS"
-    ) {
-        return axios.post(this.webhookUrl, {
-            attachments: [{
-                text: message,
-                color: type === "SUCCESS" ? this.successColor : this.errorColor
-            }]
-        })
-    }
+export const slackClient = axios.create({baseURL: env.SLACK_WEBHOOK_URL})
+
+export function sendAppStatusUpdates(apps: App[]) {
+    const blocks = generateBlocks(apps)
+    return slackClient.post("", {
+        text: "",
+        blocks
+    })
 }
+
+export function sendMessage(message: string, type: "ERROR" | "SUCCESS") {
+    return slackClient.post("", {
+        attachments: [{
+            text: message,
+            color: type === "SUCCESS" ? messageConfig.successColor : messageConfig.errorColor
+        }]
+    })
+}
+
 function generateBlocks(apps: App[]) {
     const sortedApps = UptimeStore.sortAppsByStatus(apps)
+    const statusText = (app: App) => {
+        const emoji = app.status === "up" ? messageConfig.successEmoji : messageConfig.errorEmoji
+        return `${emoji} *${app.name}* is *${app.status.toUpperCase()}*\n${app.url}`
+    }
     const blockHeader = {
         type: "header",
         text: {
@@ -49,9 +47,11 @@ function generateBlocks(apps: App[]) {
     const divider = {
         type: "divider"
     }
-
     const blocks: any[] = [blockHeader, divider]
     for (const app of sortedApps) {
+        /**
+         * First we push the section itself
+         */
         blocks.push({
             type: "section",
             text: {
@@ -68,6 +68,19 @@ function generateBlocks(apps: App[]) {
                 url: "https://monitoring.timzolleis.com/app/uptime"
             }
         })
+        /**
+         * Then we add the tags as context (such as the operating platform or the system environment
+         */
+        blocks.push({
+            "type": "context",
+            "elements": app.tags.map(tag => {
+                return {
+                    "type": "mrkdwn",
+                    "text": tag
+                }
+            })
+        },)
+        //After that we add a divider
         blocks.push(divider)
     }
     return blocks

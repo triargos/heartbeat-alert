@@ -1,39 +1,33 @@
-import {SlackClient} from "./slack/slack-client";
+import {sendAppStatusUpdates, sendMessage} from "./slack/slack-client";
 import {env} from "./env";
-import {ElasticClient, parseElasticResponse} from "./elastic/elastic-client";
+import {getMonitorStatus, parseElasticResponse} from "./elastic/elastic-client";
 import {elasticConfig} from "../config/elastic";
 import {UptimeStore} from "./state/uptime";
 import {AxiosError} from "axios";
 
-const slackClient = new SlackClient(env.SLACK_WEBHOOK_URL);
-const elasticClient = new ElasticClient(env.ELASTICSEARCH_URL, env.ELASTICSEARCH_API_KEY, elasticConfig.index)
-const uptimeStore = new UptimeStore(slackClient);
+const uptimeStore = new UptimeStore();
 
 async function getStatus() {
-    console.log("Getting status")
-    const response = await elasticClient.getStatus()
+    const response = await getMonitorStatus()
     return parseElasticResponse(response.data);
 }
 
 function index() {
+    sendMessage(`🚀 The monitoring service has started! Expect the first status update in 20 seconds 🚀`, "SUCCESS").then(() => console.log("Initialized"))
     setInterval(async () => {
         try {
             const status = await getStatus()
             const hasChanged = uptimeStore.checkUptimeChange(status)
-            if(hasChanged){
-                await slackClient.sendAppStatusUpdate(status)
+            if (hasChanged) {
+                await sendAppStatusUpdates(status)
             }
         } catch (error: unknown) {
             console.log(error)
-             if(error instanceof Error){
-                 await slackClient.sendMessage(error.message, "ERROR")
-             }
-             else if(error instanceof AxiosError){
-                 await slackClient.sendMessage(error.message, "ERROR")
-             }
-             else await slackClient.sendMessage("Error getting status", "ERROR")
+            if (error instanceof Error || error instanceof AxiosError) {
+                await sendMessage(error.message, "ERROR")
+            } else await sendMessage("Error reading status. Please check your configuration", "ERROR")
         }
-        }, elasticConfig.intervalSeconds * 1000)
+    }, elasticConfig.intervalSeconds * 1000)
 
 }
 index()

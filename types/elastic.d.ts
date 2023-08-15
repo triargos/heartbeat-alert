@@ -56,6 +56,7 @@ export interface Hit {
 export interface Source {
     url: Url
     monitor: Monitor
+    tags: string[]
 }
 
 export interface Url {
