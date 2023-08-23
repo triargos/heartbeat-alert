@@ -2,7 +2,7 @@ import {ReactNode} from "react";
 import {Header} from "~/components/header";
 import {Sidebar} from "~/components/sidebar";
 
-export const Layout = ({children}: {children: ReactNode}) => {
+export const Layout = ({children}: { children: ReactNode }) => {
     return <main className={"font-inter"}>
         <Header/>
         <div className={"flex w-full"}>

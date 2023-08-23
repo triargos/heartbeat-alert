@@ -2,6 +2,9 @@ import axios, {AxiosError} from "axios";
 import {env} from "../../../src/env";
 
 import {z} from "zod"
+import {elasticClient, getElasticQuery, parseElasticResponse} from "../../../src/elastic/elastic-client";
+import {elasticConfig} from "../../../config/elastic";
+import {ElasticHeartbeatResponse} from "../../../types/elastic";
 
 export const elasticAuthResponse = z.object({
     username: z.string(),
@@ -18,13 +21,13 @@ export const elasticAuthResponse = z.object({
 export type ElasticAuthentication = z.infer<typeof elasticAuthResponse>
 
 
-const elasticClient = axios.create({
+const elasticAuthClient = axios.create({
     baseURL: env.ELASTICSEARCH_URL,
 })
 
 export async function authenticate(username: string, password: string) {
     try {
-        const response = await elasticClient.get("/_security/authenticate", {
+        const response = await elasticAuthClient.get("/_security/authenticate", {
             auth: {
                 username,
                 password
@@ -36,5 +39,12 @@ export async function authenticate(username: string, password: string) {
             throw new Error(`Authentication error: ${error.message}`)
         }
     }
+}
 
+export async function getElasticMonitors(){
+    const query = getElasticQuery(10);
+    const response = await elasticClient.post<ElasticHeartbeatResponse>(`/${elasticConfig.index}/_search`, {
+        ...query
+    })
+    return parseElasticResponse(response.data);
 }

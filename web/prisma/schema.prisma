@@ -11,25 +11,23 @@ datasource db {
 }
 
 model Project {
-  id String @id @default(cuid())
-  name String
+  id       String    @id @default(cuid())
+  name     String
   monitors Monitor[]
 }
 
 model Monitor {
-  id String @id @default(cuid())
-  name String
-  url String @unique
-  tags Tag[]
-  addedAt String
-  deletedAt String?
-  projectId String
-  project Project @relation(fields: [projectId], references: [id])
+  id        String    @id @default(cuid())
+  name      String
+  type      String
+  url       String
+  elasticId String    @unique
+  projects  Project[]
+  tags      Tag[]
 }
 
-
 model Tag {
-  id String @id @default(cuid())
-  name String @unique
+  id       String    @id @default(cuid())
+  name     String
   monitors Monitor[]
 }

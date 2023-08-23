@@ -67,4 +67,6 @@ export interface Url {
 export interface Monitor {
     name: string
     status: string
+    id: string
+    type: string
 }

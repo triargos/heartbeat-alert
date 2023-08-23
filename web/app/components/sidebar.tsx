@@ -1,7 +1,7 @@
 import type {ReactNode} from "react";
 import {NavLink} from "@remix-run/react";
 import {cn} from "~/utils";
-import {Activity} from "lucide-react";
+import {Activity, FolderDot} from "lucide-react";
 
 export const Sidebar = () => {
     return (
@@ -14,6 +14,10 @@ export const Sidebar = () => {
                 <SidebarNavLink to={"/monitors"}>
                     <Activity className={"h-6 w-6"}/>
                     <p>Monitors</p>
+                </SidebarNavLink>
+                <SidebarNavLink to={"/projects"}>
+                    <FolderDot className={"h-6 w-6"}/>
+                    <p>Projects</p>
                 </SidebarNavLink>
             </div>
         </nav>

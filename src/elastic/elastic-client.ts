@@ -3,7 +3,7 @@ import {elasticConfig} from "../../config/elastic";
 import {ElasticHeartbeatResponse} from "../../types/elastic";
 import {env} from "../env";
 
-const elasticClient = axios.create({baseURL: env.ELASTICSEARCH_URL, headers: {
+export const elasticClient = axios.create({baseURL: env.ELASTICSEARCH_URL, headers: {
     "Authorization": `ApiKey ${env.ELASTICSEARCH_API_KEY}`
     }})
 
@@ -20,7 +20,9 @@ export function parseElasticResponse(data: ElasticHeartbeatResponse) {
             const status = bucket.top_hit.hits.hits[0]._source.monitor.status;
             const tags = bucket.top_hit.hits.hits[0]._source.tags
             const url = bucket.top_hit.hits.hits[0]._source.url.full;
-            return {name, status, url, tags}
+            const id = bucket.top_hit.hits.hits[0]._source.monitor.id;
+            const type = bucket.top_hit.hits.hits[0]._source.monitor.type;
+            return {name, status, url, tags, id, type}
         });
     } catch (error) {
         throw new Error("Error parsing response");
@@ -28,7 +30,7 @@ export function parseElasticResponse(data: ElasticHeartbeatResponse) {
 }
 
 
-function getElasticQuery(minutesAgo: number){
+export function getElasticQuery(minutesAgo: number){
     return {
         _source: ["@timestamp", "monitor.status", "monitor.name", "url.full"],
         sort: [
@@ -87,7 +89,9 @@ function getElasticQuery(minutesAgo: number){
                             _source: {
                                 includes: [
                                     "monitor.name",
+                                    "monitor.id",
                                     "monitor.status",
+                                    "monitor.type",
                                     "url.full",
                                     "url.domain",
                                     "tags"
