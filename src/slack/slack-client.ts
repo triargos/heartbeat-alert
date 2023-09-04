@@ -1,5 +1,5 @@
 import axios from "axios";
-import {App, UptimeStore} from "../state/uptime";
+import {App} from "../alert/uptime";
 import {env} from "../env";
 
 const messageConfig = {
@@ -31,11 +31,7 @@ export function sendMessage(message: string, type: "ERROR" | "SUCCESS") {
 }
 
 function generateBlocks(apps: App[]) {
-    const sortedApps = UptimeStore.sortAppsByStatus(apps)
-    const statusText = (app: App) => {
-        const emoji = app.status === "up" ? messageConfig.successEmoji : messageConfig.errorEmoji
-        return `${emoji} *${app.name}* is *${app.status.toUpperCase()}*\n${app.url}`
-    }
+
     const blockHeader = {
         type: "header",
         text: {
@@ -48,41 +44,52 @@ function generateBlocks(apps: App[]) {
         type: "divider"
     }
     const blocks: any[] = [blockHeader, divider]
-    for (const app of sortedApps) {
-        /**
-         * First we push the section itself
-         */
-        blocks.push({
-            type: "section",
-            text: {
-                type: "mrkdwn",
-                text: statusText(app)
-            },
-            accessory: {
-                type: "button",
-                text: {
-                    type: "plain_text",
-                    emoji: true,
-                    text: "View"
-                },
-                url: "https://monitoring.timzolleis.com/app/uptime"
-            }
-        })
-        /**
-         * Then we add the tags as context (such as the operating platform or the system environment
-         */
-        blocks.push({
-            "type": "context",
-            "elements": app.tags.map(tag => {
-                return {
-                    "type": "mrkdwn",
-                    "text": tag
-                }
-            })
-        },)
-        //After that we add a divider
+
+    apps.forEach(app => {
+        //Get the status itself
+        const appStatusBlock = getAppStatusBlock(app)
+        const appContextBlock = getAppContextBlock(app)
+        blocks.push(appStatusBlock)
+        if (appContextBlock) blocks.push(appContextBlock)
         blocks.push(divider)
-    }
+
+    })
     return blocks
 }
 
+
+function getAppStatusBlock(app: App) {
+    const statusText = (app: App) => {
+        const emoji = app.status === "up" ? messageConfig.successEmoji : messageConfig.errorEmoji
+        return `${emoji} *${app.name}* is *${app.status.toUpperCase()}*\n${app.url}`
+    }
+    return {
+        type: "section",
+        text: {
+            type: "mrkdwn",
+            text: statusText(app)
+        },
+        accessory: {
+            type: "button",
+            text: {
+                type: "plain_text",
+                emoji: true,
+                text: "View"
+            },
+            url: `${env.KIBANA_URL}/app/uptime`
+        }
+    }
+}
+
+function getAppContextBlock(app: App) {
+    if (!app.tags) return undefined;
+    return {
+        "type": "context",
+        "elements": app.tags.map(tag => {
+            return {
+                "type": "mrkdwn",
+                "text": tag
+            }
+        })
+    }
+}
