@@ -8,5 +8,4 @@ COPY .env .env
 RUN npm ci --omit=dev
 
 
-
-ENTRYPOINT ["top", "-b"]
+ENTRYPOINT ["npx", "ts-node", "src/index.ts"]
