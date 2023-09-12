@@ -17,11 +17,11 @@ export function parseElasticResponse(data: ElasticHeartbeatResponse) {
     try {
         return data.aggregations.by_monitors.buckets.map((bucket) => {
             const name = bucket.key;
-            const status = bucket.top_hit.hits.hits[0]._source.monitor.status;
-            const tags = bucket.top_hit.hits.hits[0]._source.tags
-            const url = bucket.top_hit.hits.hits[0]._source.url.full;
-            const id = bucket.top_hit.hits.hits[0]._source.monitor.id;
-            const type = bucket.top_hit.hits.hits[0]._source.monitor.type;
+            const status = bucket.top_hit.hits.hits[0]._source.monitor?.status;
+            const tags = bucket.top_hit.hits.hits[0]._source?.tags
+            const url = bucket.top_hit.hits.hits[0]._source.url?.full;
+            const id = bucket.top_hit.hits.hits[0]._source.monitor?.id;
+            const type = bucket.top_hit.hits.hits[0]._source.monitor?.type;
             return {name, status, url, tags, id, type}
         });
     } catch (error) {
