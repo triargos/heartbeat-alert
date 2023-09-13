@@ -9,7 +9,7 @@ First, clone this repository to a machine you want to run the deamon from. The e
 
 
 ```bash
-git clone https://git.timzolleis.com/slack-alert.git
+git clone https://github.com/triargos/slack-alert.git
 ```
 
 Next, copy the .env.example file to config/.env and assign the following variables:
