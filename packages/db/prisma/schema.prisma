@@ -1,0 +1,28 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Action {
+  id          Int           @id @default(autoincrement())
+  timestamp   String
+  type        String
+  context     String
+  monitorName String?
+  sentActions SentActions[]
+}
+
+model SentActions {
+  id        Int    @id @default(autoincrement())
+  timestamp String
+  action    Action @relation(fields: [actionId], references: [id])
+  actionId  Int
+  channel   String
+}
