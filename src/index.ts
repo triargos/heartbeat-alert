@@ -1,10 +1,8 @@
-import {Heartbeat} from "heartbeat/src/client";
 import {env} from "./env";
-import {Logger, MonitorStatusChangeContext} from "logger/src/logger";
-import {getLastError, getLastMonitorAction} from "db/src/actions";
-import {ACTIONS} from "db/lib/actions.constants";
-
-
+import {Heartbeat} from "../packages/heartbeat/src/client";
+import {Logger, MonitorStatusChangeContext} from "../packages/logger/src/logger";
+import {getLastError, getLastMonitorAction} from "../packages/db/src/actions";
+import {ACTIONS} from "../packages/db/lib/actions.constants";
 function watchMonitors() {
     const heartbeat = new Heartbeat(env.ELASTICSEARCH_API_KEY, env.ELASTICSEARCH_URL);
     const logger = new Logger();

@@ -1,0 +1,8 @@
+{
+  "event": "MONITOR_DOWN",
+  "channels": [
+    "SLACK",
+    "DISCORD"
+  ],
+  "after_seconds": 60
+}
