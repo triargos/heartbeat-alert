@@ -6,19 +6,80 @@ Send **elastic heartbeat** status updates / alerts to your slack / discord chann
 
 > ❗️ Note: You have to have docker and docker-compose installed.
 
-First, clone this repository to a machine you want to run the deamon from. The elasticsearch instance needs to be
-reachable from there.
+### Configure environment variables
 
-```bash
-git clone https://github.com/triargos/heartbeat-alert.git
-```
-
-Next, copy the .env.example file to .env and assign the following variables:
+In order to run the service, you need to configure the following environment variables:
 
 - ```SLACK_WEBHOOK_URL```
 - ```ELASTICSEARCH_URL```
 - ```KIBANA_URL```
 - ```ELASTICSEARCH_API_KEY```
+
+> You can copy the .env.example file to .env and assign the variables there.
+
+### Configure the service
+
+Next, you (can) configure the service intervals. The following configurations are supported:
+
+| Name                   | Default | Unit      |
+|------------------------|---------|-----------|
+| `watchMonitorInterval` | `30`    | `seconds` |
+| `watchEventsInterval`  | `30`    | `seconds` |
+
+To assign the configuration, create a json file with the following structure and mount it to `/app/config/service.json`
+
+````json
+{
+  "watchMonitorInterval": 60,
+  "watchEventsInterval": 60
+}
+
+````
+
+### Configure alerting rules
+
+You decide when you want to be alerted by creating rule entries in the "rules" directory. You can decide where you
+create it, just mount it as a volume to ```/app/config/rules```.
+
+> ❗️ Note: You can name the file however you want
+
+To create a rule that triggers when a monitor reports the `DOWN` status, you can create a `down.json` file in the rules
+directory that looks like this:
+
+````json
+{
+  "event": "STATUS_DOWN",
+  "channels": [
+    "SLACK",
+    "DISCORD"
+  ],
+  "after_seconds": 60
+}
+````
+The `after_seconds ` rule specifies how long the service should wait until it notifies the channel (for example if you have a service that reports down for 10 seconds when updating)
+
+
+#### Available event triggers
+
+| Trigger name      |
+|-------------------|
+| `STATUS_UP`       |
+| `STATUS_DOWN`     |
+| `ERROR`           |
+| `ERROR_RECOVERED` |
+
+#### Available channels
+
+| Channel name |
+|--------------|
+| `SLACK`      |
+
+(more channels are planned)
+
+
+### Running the project
+
+
 
 You can either run this service standalone or within a docker-compose setup. We recommend the latter:
 
@@ -27,63 +88,17 @@ You can either run this service standalone or within a docker-compose setup. We 
 
 slack-alert:
   container_name: heartbeat-alert
-  build:
-    context heartbeat-alert/
+  image: triargos/heartbeat-alert:latest
   env_file:
     - ./heartbeat-alert/.env
   restart: unless-stopped
-
+  volumes:
+    ./config:/app/config
+  
 ...
 ```
 
 This way, you could integrate the heartbeat-alert integration into your ELK stack docker setup.
-
-Now you need to configure your alerts and intervals. Create a ```config``` folder in the project root.
-
-### Configure intervals
-
-The service configuration is created as a "service.json" file. Provide the intervals for the application in seconds
-
-```json
-{
-  "watchMonitorInterval": 60,
-  "watchEventsInterval": 60
-}
-````
-
-### Configure alerting rules
-
-Create a ```rules``` directory in the in the ```config```` folder. Here you can add as many rules in the JSON format as
-you want. They have the following format:
-
-```json
-{
-  "event": "STATUS_UP",
-  "channels": [
-    "SLACK",
-    "DISCORD"
-  ],
-  "after_seconds": 60
-}
-```
-
-The configuration supports the following events:
-
-| Event Name        |
-|-------------------|
-| `STATUS_UP`       |
-| `STATUS_DOWN`     |
-| `ERROR`           |
-| `ERROR_RECOVERED` |
-
-The configuration supports the following channels:
-
-| Channel Name |
-|--------------|
-| `SLACK`      |
-
-### Start the service
-
 To start, just start up your docker-compose project:
 
 ```bash
