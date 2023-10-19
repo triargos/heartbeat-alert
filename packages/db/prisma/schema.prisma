@@ -11,18 +11,10 @@ datasource db {
 }
 
 model Action {
-  id          Int           @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   timestamp   String
   type        String
   context     String
   monitorName String?
-  sentActions SentActions[]
-}
-
-model SentActions {
-  id        Int    @id @default(autoincrement())
-  timestamp String
-  action    Action @relation(fields: [actionId], references: [id])
-  actionId  Int
-  channel   String
+  sent        Boolean @default(false)
 }

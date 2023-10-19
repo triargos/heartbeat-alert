@@ -1,7 +1,7 @@
-import {prisma} from "db/src/db";
+import {ACTIONS} from "../../db/lib/actions.constants";
+import {prisma} from "../../db/src/db";
 import {parseIso} from "./luxon";
 import {DateTime} from "luxon";
-import {ACTIONS} from "db/lib/actions.constants";
 
 export type MonitorStatusChangeContext = {
     monitorName: string
@@ -17,6 +17,7 @@ export class Logger {
     async status(context: MonitorStatusChangeContext) {
         await prisma.action.create({
             data: {
+                monitorName: context.monitorName,
                 type: context.status === "up" ? ACTIONS.STATUS_UP : ACTIONS.STATUS_DOWN,
                 context: JSON.stringify(context),
                 timestamp: parseIso(DateTime.now()),

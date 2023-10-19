@@ -1,11 +1,17 @@
-FROM node:18
-LABEL authors="Tim"
+FROM node:stretch-slim
 
 WORKDIR /app
-RUN git clone https://github.com/timzolleis/slack-alert.git .
+# Clone the GitHub repository
+RUN git clone https://github.com/triargos/heartbeat-alert.git .
+# Copy environment variables
 COPY .env .env
-
+# Perform a clean install
 RUN npm ci --omit=dev
 
+# Generate prisma client
+RUN npm run prisma-generate
+# Generate SQLite
+RUN npm run prisma-push
 
+# Start the service
 ENTRYPOINT ["npx", "ts-node", "src/index.ts"]

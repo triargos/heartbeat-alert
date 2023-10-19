@@ -32,12 +32,12 @@ export const monitorSchema = z.object({
                                     _id: z.string(),
                                     _score: z.null(),
                                     _source: z.object({
-                                        url: z.object({domain: z.string(), full: z.string()}),
+                                        url: z.object({domain: z.string(), full: z.string()}).optional(),
                                         monitor: z.object({
                                             id: z.string(),
                                             status: z.string(),
                                             name: z.string(),
-                                            type: z.string()
+                                            type: z.string().optional(),
                                         })
                                     }),
                                     sort: z.array(z.number())

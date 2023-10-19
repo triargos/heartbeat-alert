@@ -1,9 +1,10 @@
 {
   "name": "slack-alert",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "prisma-generate": "prisma generate --schema ./packages/db/prisma/schema.prisma",
+    "prisma-push": "prisma db push --schema ./packages/db/prisma/schema.prisma"
   },
   "keywords": [],
   "author": "",

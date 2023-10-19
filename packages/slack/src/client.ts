@@ -1,5 +1,4 @@
 import axios, {AxiosInstance} from "axios";
-import {messageConfig} from "../../../src/slack/message-blocks";
 import {getStatusChangedToDownBlock, getStatusChangedToUpBlock} from "./block-creator";
 
 
@@ -25,7 +24,7 @@ export class Slack {
         return this.client.post("", {
             attachments: [{
                 text: message,
-                color: type === "SUCCESS" ? messageConfig.successColor : messageConfig.errorColor
+                color: type === "SUCCESS" ? this.successColor : this.errorColor
             }]
         });
     }
