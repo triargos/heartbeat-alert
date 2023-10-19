@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import {z} from "zod";
-import {ACTIONS, CHANNELS} from "../packages/db/lib/actions.constants";
+import {ACTIONS, CHANNELS} from "../packages/db";
 
 export type Rule = z.infer<typeof ruleSchema>;
 

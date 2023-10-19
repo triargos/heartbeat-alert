@@ -1,8 +1,8 @@
 import {env} from "./env";
 import {Heartbeat} from "../packages/heartbeat/src/client";
-import {Logger, MonitorStatusChangeContext} from "../packages/logger/src/logger";
-import {getLatestActionsToSend, getLastError, getLastMonitorAction} from "../packages/db/src/actions";
-import {ACTIONS} from "../packages/db/lib/actions.constants";
+import {Logger} from "../packages/logger";
+import {getLatestActionsToSend, getLastError, getLastMonitorAction} from "../packages/db";
+import {ACTIONS} from "../packages/db";
 import {readRules, readServiceConfig} from "./read-config";
 import {sendMessages} from "./send-messages";
 

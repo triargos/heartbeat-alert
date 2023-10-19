@@ -1,5 +1,5 @@
-import {ACTIONS} from "../../db/lib/actions.constants";
-import {prisma} from "../../db/src/db";
+import {ACTIONS} from "../../db";
+import {prisma} from "../../db";
 import {parseIso} from "./luxon";
 import {DateTime} from "luxon";
 
