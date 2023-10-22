@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import * as fs from "node:fs";
 import * as path from "path";
 import {z} from "zod";
 import {ACTIONS, CHANNELS} from "../packages/db";
@@ -48,11 +48,11 @@ const defaultServiceConfig = {
 
 export function readServiceConfig() {
     try {
-        const filePath = path.join(__dirname, "..", "config", "services.json");
+        const filePath = path.join("config", "service.json");
         const data = fs.readFileSync(filePath, "utf8");
-        const json = JSON.parse(data);
-        return serviceSchema.parse(json)
+        return serviceSchema.parse(JSON.parse(data));
     } catch (e) {
+        console.log("Could'nt read service config", e)
         return defaultServiceConfig;
     }
 }

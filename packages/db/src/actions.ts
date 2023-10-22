@@ -15,7 +15,7 @@ export async function getLastMonitorAction(monitorName: string) {
     })
 }
 
-export async function getLastError() {
+export async function getLatestError() {
     return prisma.action.findFirst({
         where: {
             type: ACTIONS.ERROR || ACTIONS.ERROR_RECOVERED
@@ -26,67 +26,52 @@ export async function getLastError() {
     })
 }
 
-export async function getLatestActionsToSend() {
-    //Get all monitors first
-    const uniqueMonitors = await prisma.action.findMany({
+export async function getLatestUnsentError() {
+    return prisma.action.findFirst({
         where: {
+            type: ACTIONS.ERROR || ACTIONS.ERROR_RECOVERED,
             sent: false
         },
         orderBy: {
-            timestamp: 'desc'
-        },
-        distinct: ['monitorName']
-    });
-    const actionsToSend: Action[] = [];
-    for (const monitor of uniqueMonitors) {
-        const latestSentAction = await prisma.action.findFirst({
+            timestamp: "desc"
+        }
+    })
+}
+
+
+export async function shouldNotify(monitorName: string) {
+    const [latestSentMessage, latestUnsentMessage] = await Promise.all([
+        prisma.action.findFirst({
             where: {
-                monitorName: monitor.monitorName,
+                monitorName,
                 sent: true
             },
             orderBy: {
                 timestamp: 'desc'
             }
-        });
-        const latestUnsentAction = await prisma.action.findFirst({
+        }),
+        prisma.action.findFirst({
             where: {
-                monitorName: monitor.monitorName,
+                monitorName,
                 sent: false
             },
             orderBy: {
                 timestamp: 'desc'
             }
-        });
-        if (latestUnsentAction && latestSentAction?.type !== latestUnsentAction?.type) {
-            actionsToSend.push(latestUnsentAction);
-        }
-
-    }
-    return actionsToSend;
+        })]);
+    const sendNotification = latestSentMessage?.type !== latestUnsentMessage?.type
+    return {sendNotification, latestUnsentMessage}
 }
 
-
-export async function markActionAsSent(action: Action) {
-    const monitorsToUpdate = await prisma.action.findMany({
-        where: {
-            monitorName: action.monitorName,
-            timestamp: {lte: action.timestamp}
-        },
-    });
-    for (const monitor of monitorsToUpdate) {
-        await prisma.action.update({
-            where: {id: monitor.id},
-            data: {sent: true},
-        });
-    }
+export async function markActionAsSent(actionId: Action["id"]) {
     return prisma.action.update({
         where: {
-            id: action.id
+            id: actionId
         },
         data: {
             sent: true
         }
-    })
+    });
 }
 
 

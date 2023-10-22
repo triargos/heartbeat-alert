@@ -1,10 +1,17 @@
-import {env} from "./env";
+import {
+    ACTIONS,
+    getLatestError,
+    getLastMonitorAction,
+    prisma,
+    shouldNotify,
+    getLatestUnsentError
+} from "../packages/db";
+import {actionEmitter} from "../packages/emitter";
 import {Heartbeat} from "../packages/heartbeat/src/client";
 import {Logger} from "../packages/logger";
-import {getLatestActionsToSend, getLastError, getLastMonitorAction} from "../packages/db";
-import {ACTIONS} from "../packages/db";
+import {notify} from "./send";
+import {env} from "./env";
 import {readRules, readServiceConfig} from "./read-config";
-import {sendMessages} from "./send-messages";
 
 function watchMonitors() {
     const heartbeat = new Heartbeat(env.ELASTICSEARCH_API_KEY, env.ELASTICSEARCH_URL);
@@ -30,7 +37,7 @@ function watchMonitors() {
              * Check if we are already in error state
              */
             const errorMessage = error instanceof Error ? error.message : "Unable to retrieve status: Unknown error";
-            const lastError = await getLastError();
+            const lastError = await getLatestError();
             /**
              * If we have an error, we check if it is recovered. If not, we log a new one
              */
@@ -46,27 +53,27 @@ function watchMonitors() {
  * This function watches the actions table for changes and sends a message to slack
  */
 function watchEvents() {
-    const config = readServiceConfig();
-    setInterval(async () => {
-        try {
-            const unsentEvents = await getLatestActionsToSend();
-            //If we do not have anything unsent, we can just skip
-            if (unsentEvents.length === 0) {
-                return;
-            }
-            const rules = readRules();
-            for (const rule of rules) {
-                const actions = unsentEvents.filter(action => {
-                    return action.type === rule.event
-                })
-                for (const action of actions) {
-                    await sendMessages(action, rule);
+    actionEmitter.on("action_create", async (monitorName?: string) => {
+        if (!monitorName) {
+            const latestUnsentError = await getLatestUnsentError();
+            if (latestUnsentError) {
+                const rules = readRules();
+                const filteredRules = rules.filter(rule => rule.event === latestUnsentError?.type);
+                for (const rule of filteredRules) {
+                    await notify(latestUnsentError, rule)
                 }
             }
-        } catch (e) {
-            console.log("Error sending messages", e);
+            return;
         }
-    }, config.watchEventsInterval * 1000)
+        const {sendNotification, latestUnsentMessage} = await shouldNotify(monitorName);
+        if (sendNotification && latestUnsentMessage) {
+            const rules = readRules();
+            const filteredRules = rules.filter(rule => rule.event === latestUnsentMessage?.type);
+            for (const rule of filteredRules) {
+                await notify(latestUnsentMessage, rule)
+            }
+        }
+    })
 }
 
 function index() {

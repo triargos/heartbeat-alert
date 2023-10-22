@@ -12,9 +12,7 @@ export type NotificationProps = {
 export class Slack {
     private client: AxiosInstance
     private successColor = "#48A868"
-    private successEmoji = "🟢"
     private errorColor = "#CC3643"
-    private errorEmoji = "🔴"
 
     constructor(baseUrl: string) {
         this.client = axios.create({baseURL: baseUrl})
@@ -46,8 +44,12 @@ export class Slack {
         return this.sendBlocks(blocks)
     }
 
-    async sendApplicationError(message: string) {
+    async sendErrorNotification(message: string) {
         return this.sendMessage(message, "ERROR")
+    }
+
+    async sendErrorRecoveredNotification() {
+        return this.sendMessage("The application has successfully recovered from it's error state", "SUCCESS")
     }
 
 
