@@ -39,7 +39,12 @@ export async function getLatestUnsentError() {
 }
 
 
-export async function shouldNotify(monitorName: string) {
+export async function shouldNotify(monitorName?: string) {
+    if (!monitorName) {
+        const latestUnsentError = await getLatestUnsentError()
+        const sendNotification = !!latestUnsentError;
+        return {sendNotification, latestUnsentMessage: latestUnsentError}
+    }
     const [latestSentMessage, latestUnsentMessage] = await Promise.all([
         prisma.action.findFirst({
             where: {

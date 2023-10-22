@@ -54,26 +54,16 @@ function watchMonitors() {
  */
 function watchEvents() {
     actionEmitter.on("action_create", async (monitorName?: string) => {
-        if (!monitorName) {
-            const latestUnsentError = await getLatestUnsentError();
-            if (latestUnsentError) {
+            const {sendNotification, latestUnsentMessage} = await shouldNotify(monitorName);
+            if (sendNotification && latestUnsentMessage) {
                 const rules = readRules();
-                const filteredRules = rules.filter(rule => rule.event === latestUnsentError?.type);
+                const filteredRules = rules.filter(rule => rule.event === latestUnsentMessage?.type);
                 for (const rule of filteredRules) {
-                    await notify(latestUnsentError, rule)
+                    await notify(latestUnsentMessage, rule)
                 }
             }
-            return;
         }
-        const {sendNotification, latestUnsentMessage} = await shouldNotify(monitorName);
-        if (sendNotification && latestUnsentMessage) {
-            const rules = readRules();
-            const filteredRules = rules.filter(rule => rule.event === latestUnsentMessage?.type);
-            for (const rule of filteredRules) {
-                await notify(latestUnsentMessage, rule)
-            }
-        }
-    })
+    )
 }
 
 function index() {
