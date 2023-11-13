@@ -52,11 +52,9 @@ directory that looks like this:
   "channels": [
     "SLACK",
     "DISCORD"
-  ],
-  "after_seconds": 60
+  ]
 }
 ````
-The `after_seconds ` rule specifies how long the service should wait until it notifies the channel (for example if you have a service that reports down for 10 seconds when updating)
 
 
 #### Available event triggers

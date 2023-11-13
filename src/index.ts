@@ -1,17 +1,10 @@
-import {
-    ACTIONS,
-    getLatestError,
-    getLastMonitorAction,
-    prisma,
-    shouldNotify,
-    getLatestUnsentError
-} from "../packages/db";
-import {actionEmitter} from "../packages/emitter";
-import {Heartbeat} from "../packages/heartbeat/src/client";
-import {Logger} from "../packages/logger";
-import {notify} from "./send";
+import {ACTIONS, getLastMonitorAction, getLatestError, shouldNotify} from "@packages/db";
+import {actionEmitter} from "@packages/emitter";
+import {Heartbeat} from "@packages/heartbeat/src/client";
+import {Logger} from "@packages/logger";
 import {env} from "./env";
 import {readRules, readServiceConfig} from "./read-config";
+import {notify} from "./send";
 
 function watchMonitors() {
     const heartbeat = new Heartbeat(env.ELASTICSEARCH_API_KEY, env.ELASTICSEARCH_URL);
@@ -47,7 +40,6 @@ function watchMonitors() {
         }
     }, config.watchMonitorInterval * 1000)
 }
-
 
 /**
  * This function watches the actions table for changes and sends a message to slack

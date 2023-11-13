@@ -45,25 +45,28 @@ export async function shouldNotify(monitorName?: string) {
         const sendNotification = !!latestUnsentError;
         return {sendNotification, latestUnsentMessage: latestUnsentError}
     }
-    const [latestSentMessage, latestUnsentMessage] = await Promise.all([
-        prisma.action.findFirst({
-            where: {
-                monitorName,
-                sent: true
-            },
-            orderBy: {
-                timestamp: 'desc'
-            }
-        }),
-        prisma.action.findFirst({
-            where: {
-                monitorName,
-                sent: false
-            },
-            orderBy: {
-                timestamp: 'desc'
-            }
-        })]);
+    const latestSentMessage =   await prisma.action.findFirst({
+        where: {
+            monitorName,
+            sent: true
+        },
+        orderBy: {
+            timestamp: 'desc'
+        }
+    });
+
+    const latestUnsentMessage = await prisma.action.findFirst({
+        where: {
+            monitorName,
+            sent: false
+        },
+        orderBy: {
+            timestamp: 'desc'
+        }
+    });
+    if (!latestSentMessage) {
+        return {sendNotification: true, latestUnsentMessage}
+    }
     const sendNotification = latestSentMessage?.type !== latestUnsentMessage?.type
     return {sendNotification, latestUnsentMessage}
 }

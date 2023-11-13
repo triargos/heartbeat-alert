@@ -1,10 +1,13 @@
-FROM node:stretch-slim
+FROM node:slim
 
 WORKDIR /app
 # Clone the GitHub repository
-RUN git clone https://github.com/triargos/heartbeat-alert.git .
+COPY . .
 # Copy environment variables
-COPY .env .env
+RUN echo "DATABASE_URL=file:./dev.db" >> ".env"
+
+# Install OpenSSL
+RUN apt-get update && apt-get install -y openssl
 # Perform a clean install
 RUN npm ci --omit=dev
 

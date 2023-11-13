@@ -1,9 +1,9 @@
 import {Action} from "@prisma/client";
 import {env} from "./env";
 import {Rule} from "./read-config";
-import {ACTIONS, CHANNELS, markActionAsSent} from "../packages/db";
-import {Slack} from "../packages/slack/src/client";
-import {ErrorContext, MonitorStatusChangeContext} from "../packages/logger";
+import {ACTIONS, CHANNELS, markActionAsSent} from "@packages/db";
+import {Slack} from "@packages/slack";
+import {ErrorContext, MonitorStatusChangeContext} from "@packages/logger";
 
 const channelHandlers = {
     [CHANNELS.SLACK]: () => {

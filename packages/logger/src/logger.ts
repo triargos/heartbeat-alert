@@ -1,5 +1,4 @@
-import {ACTIONS} from "../../db";
-import {prisma} from "../../db";
+import {prisma, ACTIONS} from "@packages/db";
 import {parseIso} from "./luxon";
 import {DateTime} from "luxon";
 

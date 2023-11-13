@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "path";
 import {z} from "zod";
-import {ACTIONS, CHANNELS} from "../packages/db";
+import {ACTIONS, CHANNELS} from "@packages/db";
 
 export type Rule = z.infer<typeof ruleSchema>;
 
@@ -15,7 +15,6 @@ const [firstChannelKey, ...otherChannelKeys] = getTypedObjectKeys(CHANNELS);
 const ruleSchema = z.object({
     event: z.enum([firstEventKey, ...otherEventKey]),
     channels: z.array(z.enum([firstChannelKey, ...otherChannelKeys])),
-    after_seconds: z.number()
 })
 
 export function readRules() {
@@ -52,7 +51,7 @@ export function readServiceConfig() {
         const data = fs.readFileSync(filePath, "utf8");
         return serviceSchema.parse(JSON.parse(data));
     } catch (e) {
-        console.log("Could'nt read service config", e)
+        console.log("Couldn't read service config", e)
         return defaultServiceConfig;
     }
 }
