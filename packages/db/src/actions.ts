@@ -6,7 +6,6 @@ export async function getLastMonitorAction(monitorName: string) {
     //Return the newest item from the actions table for the given monitorName
     return prisma.action.findFirst({
         where: {
-            type: ACTIONS.STATUS_UP || ACTIONS.STATUS_DOWN,
             monitorName
         },
         orderBy: {
