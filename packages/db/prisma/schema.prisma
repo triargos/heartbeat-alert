@@ -16,5 +16,20 @@ model Action {
   type        String
   context     String
   monitorName String?
-  sent        Boolean @default(false)
+}
+
+model Monitor {
+  id      Int       @id @default(autoincrement())
+  name    String    @unique
+  status  String
+  Message Message[]
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  timestamp String
+  channel   String
+  status    String
+  monitorId Int?
+  monitor   Monitor? @relation(fields: [monitorId], references: [id])
 }

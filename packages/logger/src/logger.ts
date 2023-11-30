@@ -67,4 +67,9 @@ export class Logger {
         })
     }
 
+    info(message: string) {
+        console.log(DateTime.now().toISO(), "[INFO]", message)
+    }
+
+
 }

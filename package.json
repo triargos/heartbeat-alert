@@ -22,5 +22,8 @@
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  }
 }

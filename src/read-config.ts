@@ -51,7 +51,7 @@ export function readServiceConfig() {
         const data = fs.readFileSync(filePath, "utf8");
         return serviceSchema.parse(JSON.parse(data));
     } catch (e) {
-        console.log("Couldn't read service config", e)
+        console.log(" Couldn't read service config", e)
         return defaultServiceConfig;
     }
 }

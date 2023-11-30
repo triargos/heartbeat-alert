@@ -1,9 +1,10 @@
-import {Action} from "@prisma/client";
+import {ACTIONS, CHANNELS} from "@packages/db";
+import {getLastMessageForChannel, logMessage} from "@packages/db/src/messages";
+import {Slack} from "@packages/slack";
+import {Monitor} from "@prisma/client";
+import {DateTime} from "luxon";
 import {env} from "./env";
 import {Rule} from "./read-config";
-import {ACTIONS, CHANNELS, markActionAsSent} from "@packages/db";
-import {Slack} from "@packages/slack";
-import {ErrorContext, MonitorStatusChangeContext} from "@packages/logger";
 
 const channelHandlers = {
     [CHANNELS.SLACK]: () => {
@@ -18,46 +19,52 @@ const channelHandlers = {
 } as const
 
 
-export async function notify(action: Action, rule: Rule) {
-    switch (rule.event) {
-        case ACTIONS.STATUS_UP: {
-            const context = JSON.parse(action.context) as MonitorStatusChangeContext
-            for (const channel of rule.channels) {
-                await channelHandlers[channel]().sendUpNotification({
-                    appName: context.monitorName,
-                    previousStatus: "down",
-                    currentStatus: context.status
-                });
+export async function notifyMonitorDown(monitor: Monitor, rule: Rule) {
+    //Check if we already sent a down notification in the last 12 hours
+    for (const channel of rule.channels) {
+        const lastSentMessage = await getLastMessageForChannel(monitor.id, channel);
+        //We send if it doesnt exist, if is
+        switch (lastSentMessage?.status) {
+            case ACTIONS.STATUS_DOWN: {
+                //Check if it has been 12 hours since the last notification
+                if (DateTime.now().diff(DateTime.fromISO(lastSentMessage.timestamp)).as("hours") > 12) {
+                    await channelHandlers[channel]().sendDownNotification({
+                        appName: monitor.name,
+                        previousStatus: "up",
+                        currentStatus: "down"
+                    });
+                    //We need to log that we sent something
+                    await logMessage(monitor.id, channel, ACTIONS.STATUS_DOWN);
+                }
+                break;
             }
-            await markActionAsSent(action.id);
-            break;
-        }
-        case ACTIONS.STATUS_DOWN: {
-            const context = JSON.parse(action.context) as MonitorStatusChangeContext
-            for (const channel of rule.channels) {
+            case ACTIONS.STATUS_UP: {
+                //If it was up before, we notify immediately
                 await channelHandlers[channel]().sendDownNotification({
-                    appName: context.monitorName,
+                    appName: monitor.name,
                     previousStatus: "up",
-                    currentStatus: context.status
+                    currentStatus: "down"
                 });
+                await logMessage(monitor.id, channel, ACTIONS.STATUS_DOWN);
             }
-            await markActionAsSent(action.id);
-            break;
         }
-        case ACTIONS.ERROR: {
-            const context = JSON.parse(action.context) as ErrorContext
-            for (const channel of rule.channels) {
-                await channelHandlers[channel]().sendErrorNotification(context.cause);
+
+    }
+}
+
+export async function notifyMonitorUp(monitor: Monitor, rule: Rule) {
+    for (const channel of rule.channels) {
+        const lastSentMessage = await getLastMessageForChannel(monitor.id, channel);
+        switch (lastSentMessage?.status) {
+            case ACTIONS.STATUS_DOWN: {
+                //If it was down before, we notify immediately. Otherwise we dont notify
+                await channelHandlers[channel]().sendDownNotification({
+                    appName: monitor.name,
+                    previousStatus: "up",
+                    currentStatus: "down"
+                });
+                await logMessage(monitor.id, channel, ACTIONS.STATUS_UP);
             }
-            await markActionAsSent(action.id);
-            break;
-        }
-        case ACTIONS.ERROR_RECOVERED: {
-            for (const channel of rule.channels) {
-                await channelHandlers[channel]().sendErrorRecoveredNotification();
-            }
-            await markActionAsSent(action.id);
-            break;
         }
     }
 }
