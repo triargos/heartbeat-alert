@@ -3,27 +3,19 @@
   "rules": [
     {
       "event": "STATUS_UP",
-      "channels": [
-        "SLACK"
-      ]
+      "channels": ["SLACK"]
     },
     {
       "event": "STATUS_DOWN",
-      "channels": [
-        "SLACK"
-      ]
+      "channels": ["SLACK"]
     },
     {
       "event": "ERROR",
-      "channels": [
-        "SLACK"
-      ]
+      "channels": ["SLACK"]
     },
     {
       "event": "ERROR_RECOVERED",
-      "channels": [
-        "SLACK"
-      ]
+      "channels": ["SLACK"]
     }
   ]
 }

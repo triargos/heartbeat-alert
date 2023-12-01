@@ -5,6 +5,7 @@
     "build": "npm run build --ws && tsc -p tsconfig.json",
     "build:image": "docker buildx build -t triargos/heartbeat-alert . --push  --platform linux/amd64,linux/arm64",
     "start": "node dist/src/index.js",
+    "format": "prettier --write .",
     "prisma-generate": "prisma generate --schema ./packages/db/prisma/schema.prisma",
     "prisma-push": "prisma db push --schema ./packages/db/prisma/schema.prisma"
   },
@@ -13,8 +14,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
     "dotenv": "^16.3.1",
     "luxon": "^3.4.3",
+    "prettier": "^3.1.0",
     "typescript": "^5.3.2",
     "zod": "^3.21.4"
   },
