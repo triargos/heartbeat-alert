@@ -3,9 +3,9 @@ import {actionEmitter} from "@packages/emitter";
 import {Heartbeat} from "@packages/heartbeat/src/client";
 import {Logger} from "@packages/logger";
 import {env} from "./env";
-import {readServiceConfig} from "./read-config";
 import {notifyChannel, notifyErrorMessage, shouldNotify, shouldNotifyErrorMessage} from "./send";
 import {evictOldMessages} from "@packages/db/src/messages";
+import {readServiceConfig} from "./read-config";
 
 function watchMonitors() {
     const heartbeat = new Heartbeat(env.ELASTICSEARCH_API_KEY, env.ELASTICSEARCH_URL);

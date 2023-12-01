@@ -1,0 +1,29 @@
+{
+  "watchMonitorInterval": 10,
+  "rules": [
+    {
+      "event": "STATUS_UP",
+      "channels": [
+        "SLACK"
+      ]
+    },
+    {
+      "event": "STATUS_DOWN",
+      "channels": [
+        "SLACK"
+      ]
+    },
+    {
+      "event": "ERROR",
+      "channels": [
+        "SLACK"
+      ]
+    },
+    {
+      "event": "ERROR_RECOVERED",
+      "channels": [
+        "SLACK"
+      ]
+    }
+  ]
+}
