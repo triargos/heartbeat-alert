@@ -1,24 +1,26 @@
-import {ACTION, ACTIONS, CHANNEL, evictOldActions, getLatestError} from "@packages/db";
 import {actionEmitter} from "@packages/emitter";
-import {Heartbeat} from "@packages/heartbeat/src/client";
-import {Logger} from "@packages/logger";
+import {Heartbeat} from "@packages/heartbeat";
+import {Logger} from "@packages/logger/dist/src";
 import {env} from "./env";
 import {notifyChannel, notifyErrorMessage, shouldNotify, shouldNotifyErrorMessage} from "./send";
-import {evictOldMessages} from "@packages/db/src/messages";
 import {readServiceConfig} from "./read-config";
+import {ACTION, ACTIONS, CHANNEL, evictOldActions, getLatestError, evictOldMessages} from "@packages/db";
 
 function watchMonitors() {
-    const heartbeat = new Heartbeat(env.ELASTICSEARCH_API_KEY, env.ELASTICSEARCH_URL);
     const logger = new Logger();
+    logger.info("heartbeat-alert initialized")
+    const heartbeat = new Heartbeat(env.ELASTICSEARCH_API_KEY, env.ELASTICSEARCH_URL);
+    logger.info("heartbeat-client initialized")
     const config = readServiceConfig();
+    logger.info("read config, starting interval")
     setInterval(async () => {
         try {
             await evictOldActions();
             await evictOldMessages();
-            logger.info("Checking monitors")
+            logger.monitor("Checking monitors")
             const monitors = await heartbeat.getMonitors();
             for (const monitor of monitors) {
-                logger.info(`Checking ${monitor.name}`)
+                logger.monitor(`Checking ${monitor.name}`)
                 await logger.status({monitorName: monitor.name, status: monitor.status});
             }
         } catch (error) {
@@ -38,7 +40,7 @@ function watchEvents() {
             if (!monitorName) {
                 const channelsToNotify = await shouldNotifyErrorMessage(type) as CHANNEL[];
                 for (const channel of channelsToNotify) {
-                    logger.info(`Notifying ${channel} for ${type}`)
+                    logger.notification(`Notifying ${channel} for ${type}`)
                     await notifyErrorMessage(channel, type, context)
                 }
                 return;
@@ -46,7 +48,7 @@ function watchEvents() {
             //Get the channels to notify
             const channelsToNotify = await shouldNotify(monitorName, type);
             for (const channel of channelsToNotify) {
-                logger.info(`Notifying ${channel} for ${monitorName} ${type}`)
+                logger.notification(`Notifying ${channel} for ${monitorName} ${type}`)
                 await notifyChannel(monitorName, channel, type)
             }
         }

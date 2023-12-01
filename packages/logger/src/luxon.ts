@@ -1,4 +1,4 @@
-import {DateTime} from "luxon";
+import type {DateTime} from "luxon";
 
 export function parseIso(dateTime: DateTime) {
     const val = dateTime.toISO()

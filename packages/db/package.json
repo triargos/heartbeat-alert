@@ -1,15 +1,19 @@
 {
   "name": "@packages/db",
   "version": "1.0.0",
-  "description": "",
+  "description": "The database package of the heartbeat-alert software",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc -p tsconfig.json"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "tz@triargos.de",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "license": "MIT",
   "dependencies": {
     "@prisma/client": "^5.4.2",
     "prisma": "^5.4.2"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.3.2"
   }
 }

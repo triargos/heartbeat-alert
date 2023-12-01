@@ -44,8 +44,7 @@ const configSchema = z.object({
 
 
 function readConfig() {
-    const filePath = path.join(__dirname, "..", ".heartbeat.json");
-    const data = fs.readFileSync(filePath, "utf8");
+    const data = fs.readFileSync(".heartbeat.json", "utf8");
     return configSchema.parse(JSON.parse(data));
 
 }

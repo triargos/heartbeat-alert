@@ -1,4 +1,4 @@
-import {parseIso} from "@packages/logger/src/luxon";
+import {parseIso} from "@packages/logger";
 import {DateTime} from "luxon";
 import {prisma} from "./db";
 import {ACTION, CHANNEL} from "../lib/actions.constants";

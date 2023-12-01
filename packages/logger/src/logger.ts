@@ -71,5 +71,14 @@ export class Logger {
         console.log(DateTime.now().toISO(), "[INFO]", message)
     }
 
+    monitor(message: string) {
+        console.log(DateTime.now().toISO(), "[MONITOR]", message)
+    }
+
+    notification(message: string) {
+        console.log(DateTime.now().toISO(), "[NOTIFICATION]", message)
+    }
+
+
 
 }

@@ -1,15 +1,18 @@
 {
   "name": "@packages/logger",
   "version": "1.0.0",
-  "description": "",
+  "description": "The logger package of the heartbeat-alert software",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc -p tsconfig.json"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "tz@triargos.de",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "license": "MIT",
   "dependencies": {
-    "@types/luxon": "^3.3.2",
-    "luxon": "^3.4.3"
+    "luxon": "^3.4.4"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.3.2"
   }
 }

@@ -1,5 +1,5 @@
 import {ACTION, ACTIONS, CHANNEL, CHANNELS, getLastMonitorActions} from "@packages/db";
-import {getLastMessageForChannel, getLastMessageStatusForChannel, logMessage} from "@packages/db/src/messages";
+import {getLastMessageForChannel, getLastMessageStatusForChannel, logMessage} from "@packages/db";
 import {Slack} from "@packages/slack";
 import {DateTime} from "luxon";
 import {env} from "./env";
@@ -74,7 +74,7 @@ export async function shouldNotify(monitorName: string, status: ACTION) {
 
     //We need to check each channel if we already sent a message
     for (const rule of rules) {
-        for (const channel of rule.channels) {
+        for (const channel  of rule.channels) {
             const lastMessage = await getLastMessageForChannel(monitorName, channel);
             //The case where the last message has not been sent yet
             if (!lastMessage || lastMessage?.status !== status) {

@@ -1,8 +1,7 @@
-import {parseIso} from "@packages/logger/src/luxon";
 import {DateTime} from "luxon";
 import {ACTIONS} from "../lib/actions.constants";
 import {prisma} from "./db";
-import {Action} from "@prisma/client";
+import {parseIso} from "@packages/logger";
 
 
 export async function getLatestError() {
@@ -18,6 +17,7 @@ export async function getLatestError() {
 
 
 export async function getLastMonitorActions(monitorName: string) {
+
     const fiveMinutesAgo = parseIso(DateTime.now().minus({minutes: 5}))
     return prisma.action.findMany({
         where: {
