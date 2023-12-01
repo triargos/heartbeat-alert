@@ -10,3 +10,7 @@ export const CHANNELS = {
     EMAIL: "EMAIL",
     DISCORD: "DISCORD"
 } as const
+
+
+export type ACTION = keyof typeof ACTIONS;
+export type CHANNEL = keyof typeof CHANNELS;

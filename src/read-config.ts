@@ -36,12 +36,10 @@ export function readRules() {
 
 const serviceSchema = z.object({
     watchMonitorInterval: z.number(),
-    watchEventsInterval: z.number(),
 });
 
 const defaultServiceConfig = {
     watchMonitorInterval: 30,
-    watchEventsInterval: 30,
 }
 
 

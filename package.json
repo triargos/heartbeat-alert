@@ -1,5 +1,5 @@
 {
-  "name": "slack-alert",
+  "name": "heartbeat-alert",
   "version": "1.0.0",
   "scripts": {
     "build": "docker build -t triargos/heartbeat-alert .",
@@ -17,13 +17,13 @@
     "dotenv": "^16.3.1",
     "luxon": "^3.4.3",
     "ts-node": "^10.9.1",
-    "typescript": "^5.1.6",
+    "typescript": "^5.3.2",
     "zod": "^3.21.4"
   },
   "workspaces": [
     "packages/*"
   ],
   "devDependencies": {
-    "@types/node": "^20.10.0"
+    "@types/node": "^20.10.1"
   }
 }

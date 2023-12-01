@@ -1,11 +1,11 @@
-import {ACTIONS, getLastMonitorActions, getLatestError} from "@packages/db";
-import {findMonitor, setMonitorDown, setMonitorUp} from "@packages/db/src/monitors";
-import {actionEmitter, monitorEmitter} from "@packages/emitter";
+import {ACTION, ACTIONS, CHANNEL, evictOldActions, getLatestError} from "@packages/db";
+import {actionEmitter} from "@packages/emitter";
 import {Heartbeat} from "@packages/heartbeat/src/client";
 import {Logger} from "@packages/logger";
 import {env} from "./env";
-import {readRules, readServiceConfig} from "./read-config";
-import {notifyMonitorDown, notifyMonitorUp} from "./send";
+import {readServiceConfig} from "./read-config";
+import {notifyChannel, notifyErrorMessage, shouldNotify, shouldNotifyErrorMessage} from "./send";
+import {evictOldMessages} from "@packages/db/src/messages";
 
 function watchMonitors() {
     const heartbeat = new Heartbeat(env.ELASTICSEARCH_API_KEY, env.ELASTICSEARCH_URL);
@@ -13,9 +13,10 @@ function watchMonitors() {
     const config = readServiceConfig();
     setInterval(async () => {
         try {
+            await evictOldActions();
+            await evictOldMessages();
             logger.info("Checking monitors")
             const monitors = await heartbeat.getMonitors();
-            console.log(monitors)
             for (const monitor of monitors) {
                 logger.info(`Checking ${monitor.name}`)
                 await logger.status({monitorName: monitor.name, status: monitor.status});
@@ -33,55 +34,24 @@ function watchMonitors() {
 
 function watchEvents() {
     const logger = new Logger();
-    actionEmitter.on("action_create", async (monitorName?: string) => {
-            if (monitorName) {
-                const lastMonitorActions = await getLastMonitorActions(monitorName);
-                if (lastMonitorActions.length < 3) {
-                    return;
+    actionEmitter.on("action_create", async (type: ACTION, monitorName?: string, context?: string) => {
+            if (!monitorName) {
+                const channelsToNotify = await shouldNotifyErrorMessage(type) as CHANNEL[];
+                for (const channel of channelsToNotify) {
+                    logger.info(`Notifying ${channel} for ${type}`)
+                    await notifyErrorMessage(channel, type, context)
                 }
-                const allDown = lastMonitorActions.every(action => action.type === ACTIONS.STATUS_DOWN);
-                const allUp = lastMonitorActions.every(action => action.type === ACTIONS.STATUS_UP);
-                if (allDown) {
-                    logger.info(`Updating status for ${monitorName}: down`)
-                    await setMonitorDown(monitorName)
-                }
-                if (allUp) {
-                    logger.info(`Updating status for ${monitorName}: up`)
-                    await setMonitorUp(monitorName)
-                }
-            } else {
-                console.error("There was an error")
+                return;
+            }
+            //Get the channels to notify
+            const channelsToNotify = await shouldNotify(monitorName, type);
+            for (const channel of channelsToNotify) {
+                logger.info(`Notifying ${channel} for ${monitorName} ${type}`)
+                await notifyChannel(monitorName, channel, type)
             }
         }
     )
-    monitorEmitter.on("monitor_down", async (monitorId: number) => {
-        const monitor = await findMonitor(monitorId);
-        if (!monitor) {
-            console.error("This monitor does not exist")
-            return;
-        }
-        logger.info(`Detected down status of ${monitor.name}`)
-        const rules = readRules();
-        const downRules = rules.filter(rule => rule.event === ACTIONS.STATUS_DOWN);
-        for (const rule of downRules) {
-            logger.info(`Notifying ${rule.channels.join(", ")} about ${monitor.name} being down`)
-            await notifyMonitorDown(monitor, rule)
-        }
-    })
-    monitorEmitter.on("monitor_up", async (monitorId: number) => {
-        const monitor = await findMonitor(monitorId);
-        if (!monitor) {
-            console.error("This monitor does not exist")
-            return;
-        }
-        logger.info(`Detected up status of ${monitor.name}`)
-        const rules = readRules();
-        const upRules = rules.filter(rule => rule.event === ACTIONS.STATUS_UP);
-        for (const rule of upRules) {
-            logger.info(`Notifying ${rule.channels.join(", ")} about ${monitor.name} being up`)
-            await notifyMonitorUp(monitor, rule)
-        }
-    })
+
 }
 
 function index() {

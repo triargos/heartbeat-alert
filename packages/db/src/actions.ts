@@ -31,3 +31,14 @@ export async function getLastMonitorActions(monitorName: string) {
 }
 
 
+export async function evictOldActions() {
+    const now = parseIso(DateTime.now().minus({minutes: 10}))
+    return prisma.action.deleteMany({
+        where: {
+            timestamp: {
+                lt: now
+            }
+        }
+    })
+}
+

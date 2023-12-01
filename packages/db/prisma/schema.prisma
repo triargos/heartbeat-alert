@@ -19,17 +19,15 @@ model Action {
 }
 
 model Monitor {
-  id      Int       @id @default(autoincrement())
-  name    String    @unique
-  status  String
-  Message Message[]
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  status String
 }
 
 model Message {
-  id        Int      @id @default(autoincrement())
-  timestamp String
-  channel   String
-  status    String
-  monitorId Int?
-  monitor   Monitor? @relation(fields: [monitorId], references: [id])
+  id          Int     @id @default(autoincrement())
+  timestamp   String
+  channel     String
+  status      String
+  monitorName String?
 }

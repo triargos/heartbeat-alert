@@ -1,27 +1,14 @@
 import {parseIso} from "@packages/logger/src/luxon";
-import {Monitor} from "@prisma/client";
 import {DateTime} from "luxon";
-import {ACTIONS} from "../lib/actions.constants";
 import {prisma} from "./db";
+import {ACTION, CHANNEL} from "../lib/actions.constants";
 
-export async function getLastDownNotificationForChannel(monitorId: Monitor["id"], channel: string) {
+
+export async function getLastMessageForChannel(monitorName: string, channel: string) {
     return prisma.message.findFirst({
         where: {
             channel,
-            monitorId,
-            status: ACTIONS.STATUS_DOWN
-        },
-        orderBy: {
-            timestamp: "desc"
-        }
-    })
-}
-
-export async function getLastMessageForChannel(monitorId: Monitor["id"], channel: string) {
-    return prisma.message.findFirst({
-        where: {
-            channel,
-            monitorId
+            monitorName
         },
         orderBy: {
             timestamp: "desc"
@@ -30,26 +17,37 @@ export async function getLastMessageForChannel(monitorId: Monitor["id"], channel
 }
 
 
-export async function getLastUpNotificationForChannel(monitorId: Monitor["id"], channel: string) {
-    return prisma.message.findFirst({
-        where: {
-            channel,
-            monitorId,
-            status: ACTIONS.STATUS_UP
-        },
-        orderBy: {
-            timestamp: "desc"
-        }
-    })
-}
-
-export async function logMessage(monitorId: Monitor["id"], channel: string, status: string) {
+export async function logMessage({monitorName, channel, status}: {
+    monitorName?: string,
+    channel: CHANNEL,
+    status: ACTION
+}) {
     return prisma.message.create({
         data: {
             status,
+            monitorName,
             timestamp: parseIso(DateTime.now()),
             channel,
-            monitorId
+        }
+    })
+}
+
+export async function getLastMessageStatusForChannel(channel: CHANNEL, status: ACTION) {
+    return prisma.message.findFirst({
+        where: {
+            channel,
+            status
+        }
+    })
+}
+
+export async function evictOldMessages() {
+    const now = parseIso(DateTime.now().minus({days: 5}))
+    return prisma.message.deleteMany({
+        where: {
+            timestamp: {
+                lt: now
+            }
         }
     })
 }

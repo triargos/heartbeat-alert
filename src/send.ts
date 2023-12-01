@@ -1,10 +1,9 @@
-import {ACTIONS, CHANNELS} from "@packages/db";
-import {getLastMessageForChannel, logMessage} from "@packages/db/src/messages";
+import {ACTION, ACTIONS, CHANNEL, CHANNELS, getLastMonitorActions} from "@packages/db";
+import {getLastMessageForChannel, getLastMessageStatusForChannel, logMessage} from "@packages/db/src/messages";
 import {Slack} from "@packages/slack";
-import {Monitor} from "@prisma/client";
 import {DateTime} from "luxon";
 import {env} from "./env";
-import {Rule} from "./read-config";
+import {readRules} from "./read-config";
 
 const channelHandlers = {
     [CHANNELS.SLACK]: () => {
@@ -19,52 +18,94 @@ const channelHandlers = {
 } as const
 
 
-export async function notifyMonitorDown(monitor: Monitor, rule: Rule) {
-    //Check if we already sent a down notification in the last 12 hours
-    for (const channel of rule.channels) {
-        const lastSentMessage = await getLastMessageForChannel(monitor.id, channel);
-        //We send if it doesnt exist, if is
-        switch (lastSentMessage?.status) {
-            case ACTIONS.STATUS_DOWN: {
-                //Check if it has been 12 hours since the last notification
-                if (DateTime.now().diff(DateTime.fromISO(lastSentMessage.timestamp)).as("hours") > 12) {
-                    await channelHandlers[channel]().sendDownNotification({
-                        appName: monitor.name,
-                        previousStatus: "up",
-                        currentStatus: "down"
-                    });
-                    //We need to log that we sent something
-                    await logMessage(monitor.id, channel, ACTIONS.STATUS_DOWN);
-                }
-                break;
-            }
-            case ACTIONS.STATUS_UP: {
-                //If it was up before, we notify immediately
-                await channelHandlers[channel]().sendDownNotification({
-                    appName: monitor.name,
-                    previousStatus: "up",
-                    currentStatus: "down"
-                });
-                await logMessage(monitor.id, channel, ACTIONS.STATUS_DOWN);
-            }
+export async function notifyChannel(monitorName: string, channel: CHANNEL, status: ACTION) {
+    const handler = channelHandlers[channel]();
+    switch (status) {
+        case ACTIONS.STATUS_DOWN: {
+            await handler.sendDownNotification({
+                appName: monitorName,
+                previousStatus: "up",
+                currentStatus: "down"
+            })
+            await logMessage({monitorName, channel, status});
+            break;
         }
-
+        case ACTIONS.STATUS_UP: {
+            await handler.sendUpNotification({
+                appName: monitorName,
+                previousStatus: "down",
+                currentStatus: "up"
+            })
+            await logMessage({monitorName, channel, status});
+            break;
+        }
     }
 }
 
-export async function notifyMonitorUp(monitor: Monitor, rule: Rule) {
-    for (const channel of rule.channels) {
-        const lastSentMessage = await getLastMessageForChannel(monitor.id, channel);
-        switch (lastSentMessage?.status) {
-            case ACTIONS.STATUS_DOWN: {
-                //If it was down before, we notify immediately. Otherwise we dont notify
-                await channelHandlers[channel]().sendDownNotification({
-                    appName: monitor.name,
-                    previousStatus: "up",
-                    currentStatus: "down"
-                });
-                await logMessage(monitor.id, channel, ACTIONS.STATUS_UP);
+export async function notifyErrorMessage(channel: CHANNEL, status: ACTION, message?: string) {
+    const handler = channelHandlers[channel]();
+    switch (status) {
+        case ACTIONS.ERROR: {
+            const errorMessage = message || "An error occurred";
+            await handler.sendErrorNotification(errorMessage);
+            await logMessage({channel, status});
+            break;
+        }
+        case ACTIONS.ERROR_RECOVERED: {
+            await handler.sendErrorRecoveredNotification();
+            await logMessage({channel, status});
+            break;
+        }
+    }
+
+
+}
+
+
+export async function shouldNotify(monitorName: string, status: ACTION) {
+    const rules = readRules().filter(rule => rule.event === status);
+    //We check if the last three status updates were the same
+    const lastThreeActions = await getLastMonitorActions(monitorName);
+    const isSame = lastThreeActions.every(action => action.type === status);
+    if (lastThreeActions.length < 3 || !isSame) {
+        return [];
+    }
+    const channelsToNotify: CHANNEL[] = [];
+
+    //We need to check each channel if we already sent a message
+    for (const rule of rules) {
+        for (const channel of rule.channels) {
+            const lastMessage = await getLastMessageForChannel(monitorName, channel);
+            //The case where the last message has not been sent yet
+            if (!lastMessage || lastMessage?.status !== status) {
+                channelsToNotify.push(channel)
+            } else {
+                const diff = DateTime.now().diff(DateTime.fromISO(lastMessage.timestamp)).as("hours");
+                if (diff > 12 && status === ACTIONS.STATUS_DOWN) {
+                    channelsToNotify.push(channel)
+                }
             }
         }
     }
+    return channelsToNotify;
+}
+
+
+export async function shouldNotifyErrorMessage(status: ACTION) {
+    const rules = readRules().filter(rule => rule.event === status);
+    const channelsToNotify = await Promise.all(rules.map(async rule => {
+        return await Promise.all(rule.channels.map(async channel => {
+            //Check if we already sent an error
+            const lastErrorMessage = await getLastMessageStatusForChannel(channel, status);
+            if (!lastErrorMessage) {
+                return channel
+            }
+            const diff = DateTime.now().diff(DateTime.fromISO(lastErrorMessage.timestamp)).as("hours");
+            if (diff > 12 && status === ACTIONS.STATUS_DOWN) {
+                return channel
+            }
+            return null;
+        }))
+    }))
+    return channelsToNotify.flat().filter(Boolean)
 }
