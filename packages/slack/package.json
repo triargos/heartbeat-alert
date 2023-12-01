@@ -1,0 +1,15 @@
+{
+  "name": "@packages/slack",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.5.1",
+    "slack-block-builder": "^2.7.2"
+  }
+}

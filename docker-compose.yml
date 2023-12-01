@@ -1,0 +1,8 @@
+services:
+  test-alert:
+    image: triargos/heartbeat-alert
+    container_name: heartbeat-alert
+    volumes:
+      - ./packages/db/prisma/dev.db:/app/packages/db/prisma/dev.db
+      - ./config/:/app/config/
+      - ./.env:/app/.env
