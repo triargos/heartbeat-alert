@@ -10,9 +10,7 @@
   "types": "dist/src/index.d.ts",
   "license": "MIT",
   "dependencies": {
-    "luxon": "^3.4.4"
-  },
-  "devDependencies": {
+    "luxon": "^3.4.4",
     "@types/luxon": "^3.3.2"
   }
 }

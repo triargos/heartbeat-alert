@@ -11,9 +11,7 @@
   "license": "MIT",
   "dependencies": {
     "@prisma/client": "^5.4.2",
-    "prisma": "^5.4.2"
-  },
-  "devDependencies": {
+    "prisma": "^5.4.2",
     "@types/luxon": "^3.3.2"
   }
 }

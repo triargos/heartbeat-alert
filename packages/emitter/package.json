@@ -9,7 +9,7 @@
   "main": "dist/src/emitter.js",
   "types": "dist/src/emitter.d.ts",
   "license": "MIT",
-  "devDependencies": {
+  "dependencies": {
     "@types/node": "^14.14.10"
   }
 }

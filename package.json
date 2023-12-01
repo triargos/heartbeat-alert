@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "build": "npm run build --ws && tsc -p tsconfig.json",
-    "build-image": "docker build -t triargos/heartbeat-alert .",
+    "build:image": "docker buildx build -t triargos/heartbeat-alert . --push  --platform linux/amd64,linux/arm64",
     "start": "node dist/src/index.js",
     "prisma-generate": "prisma generate --schema ./packages/db/prisma/schema.prisma",
     "prisma-push": "prisma db push --schema ./packages/db/prisma/schema.prisma"
